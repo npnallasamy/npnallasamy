@@ -1,0 +1,143 @@
+Stage 1 : Clone Repository  - Git
+Stage 2 : Maven Build      - Maven
+Stage 3 : Code Review     - Sonar Qube
+Stage 4 : Upload Artifact  -Jfrog / Nexus Repo
+Stage 5 : Deploy App       - Apache Tomcat Server
+
+PreRequisites : 
+Servers :
+========
+1.	Tomcat Server  - 8080
+******************************
+2	Install tomcat
+3	Start  sonar server   --        Sh start.sh   ( bin folder)
+
+4	Jenkin Server   - 8080
+*******************************
+5	Create ubuntu vm
+6	Install java & Jenkins 
+7	Sudo apt-get update
+8	Sudo apt-get install default-jdk
+9	Wget -q -O -https://pkg.jenkins.io/Debian-stable/Jenkins.io.key | sudo apt-key add –
+10	Sudo sh -c ‘echo deb https://pkg.jenkins.io/debian-stable binary/>/etc/apt/sources.list.d/jenkins.list
+11	sudo apt-get update
+12	sudo apt-get install Jenkins
+13	sudo systemctl status Jenkins
+Copy Jenkins admin password from below location
+$ sudo cat /var/lib/Jenkins/secrets/initialAdminPassword
+
+ 
+	Nexus Server     -8081
+***********************************
+	Create user
+	Install nexus 
+	Create repository
+1.	Select maven 
+2.	Select version policy= Snapshot
+3.	Select Deploy policy= Allow Redeploy
+4.	Sonar Server – 9000
+5	Create user
+6	Install nexus
+7	Start sonar 
+8	Tomcat Server
+9	Create vm
+10	Install tomcat
+11	Add /install ssh-agent plugin in Jenkins server
+
+Run Process :
+============
+1.	Run Jenkins using url ( server public ip ://8080)
+2.	Login 
+3.	Maven setup
+-	Manage Jenkins – Global config tool , Select maven version , save
+
+4.	Create new Pipeline / job
+-	Select pipeline , OK
+-	Under Pipeline , Write script
+
+node{
+         stage(‘Clone Repo’){
+git credentialsId: ‘Git-credentials’, url: https//github.com/ashokitschool/maven-web-app.git’
+		}
+
+Stage(‘maven build’){
+	def mavenHome = tool name: ”Maven-3.8.6”, type: “maven”
+        def mavenCMD = “${mavenHome}/bin/mvn”
+         sh “${mavenCMD} clean package”
+		}
+Stage(‘code review’){
+	withSonarQubeEnv(‘sonar-server-7.8’){
+	def mavenHome = tool name: ”Maven-3.8.6”, type: “maven”
+        def mavenCMD = “${mavenHome}/bin/mvn”
+         sh “${mavenCMD} sonar:sonar”
+}
+
+Stage(‘Upload Build Artifact){
+ 
+// Copy the script from generated syntax policy
+
+}      
+
+ Stage(‘Deploy’) {                    // Sample step = sshagent: SSH Agent
+
+sshagent ([‘Tomcat-Server-agent’]){     
+
+Sh ‘scp -o StrictHostKeyChecking=no /target/01-mavne-wep-app.war  ec2-user@172.01.34.45:/home/ubuntu/apache-tomcat-9.0.65/webapps’
+}
+}
+
+5.	Generate pipe line script for Git using url,credentials , copy code into script above
+6.	Build now
+
+
+	SonarQube : 9000
+**************************
+1.	Add/install  sonar scanner plugin
+2.	Generate Token -> goto sonar website, MyAccount->security->generate token
+3.	Config sonar credentials in Jenkins
+4	Manage Jenkins
+5	Manage credentials
+6	Under Domain  -- > global -- > add credentials 
+7	Kind = secret text
+8	Secret= token
+9	ID=SONAR-TOKEN
+               Manage Jenkins -> config systems – add sonar
+               Sonar qube -enter name with version
+	Server URL  = enter sonar server url with port 9000
+	Server authentication token = select from list
+
+
+
+	Nexus :  8081
+************************* 
+
+	Sample Step =  NexusArtifactUploader.Nexus Artifact Uploader
+1	Install Nexus Artifact Uploader plugin
+2	Goto Nexus Details
+3	Nexus Version = NEXUS3
+4	Protocol = HTTP
+5	Nexus URL = http://<server ip>:8081
+6	Add credentials 
+7	Group id= com.npn
+8	Version= 1.0-SNAPSHOT 
+9	Repository Name = Copy from Nexus 
+10	Artifact id =01maven-wep-app      ( copy from pom.xml )
+11	Type = war
+12	File= target/ maven-wep-app.war
+13	Generate pipeline syntax and copy into script
+
+
+	Tomcat Server : 8080
+*****************************
+Deploy war file from Jenkin server to Tomcat Server
+1	Install ssh agent plugin in jenkin
+2	Click on pipeline , Sample step= sshagent: SSH-Agent
+3	Add : below values
+4	Domain= Global credentials
+5  	Kind= SSH username with private key
+6	  ID= 
+7	Username = ec2-user
+8	Private key = copy private key from pem file ( cat linux.pem , copy the key)
+9	Generate syntax and copy into script 
+10	Check application in tomcat server and test in browser by public ip
+ 
