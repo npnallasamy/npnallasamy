@@ -1,0 +1,24 @@
+STEPS TO CREATE PODS
+********************
+Execute the following commands
+●kubectl get nodes
+●kubectl create -f pod.yml
+●kubectl get pods
+●kubectl describe pods
+●kubectl get pods -o wide
+●kubectl get pods/hello-pod
+●kubectl get pods --all-namespaces
+●kubectl delete pods/hello-pod
+
+
+
+STEPS TO CREATE REPLICATION CONTROLLER
+***************************************
+Execute following commands
+kubectl create -f rc.yml
+kubectl get rc -o wide
+kubectl describe rc
+kubectl apply -f rc.yml
+kubectl get rc
+kubectl get pods
+Kubectl delete rc/rcname
